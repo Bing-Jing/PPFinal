@@ -1,0 +1,5 @@
+tensorflow=='1.15.0-rc2'
+gym
+gym_unity
+tensorflow-probability
+
