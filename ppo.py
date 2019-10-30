@@ -22,8 +22,8 @@ TIMESTAMP = datetime.now().strftime("%Y%m%d_%H%M%S")
 
 class PPO(object):
 
-    def __init__(self,environment,load=False,gpu=False):
-        
+    def __init__(self,environment,load=False,testing=False,gpu=False):
+        self.testing = testing
         self.s_dim, self.a_dim = environment.observation_space.shape, environment.action_space.n
         self.model_path = "model/"
         self.buffer_s, self.buffer_a, self.buffer_r, self.buffer_v = [], [], [] , []
@@ -56,10 +56,10 @@ class PPO(object):
         self.v, vf_params = self._build_cnet(self.batch["state"], "vf",trainable=True)
         vf_old, vf_old_params = self._build_cnet(self.batch["state"], "oldvf",trainable=False)
         self.vf_eval, _ = self._build_cnet(self.tfs, 'vf', trainable=False,reuse=True)
-
+        
         with tf.variable_scope('sample_action'):
             self.sample_op = tf.squeeze(pi_eval.sample(1), axis=0)
-        
+        self.eval_action = pi_eval.mode()
 
         # self.advantage = self.tfdc_r - self.v
         # self.closs = tf.reduce_mean(tf.square(self.advantage))
@@ -162,7 +162,11 @@ class PPO(object):
         return vf, params
     def choose_action(self, s):
         s = s[np.newaxis, :]
-        a, v = self.sess.run([self.sample_op, self.vf_eval], {self.tfs: s})
+        if not self.testing:
+            a, v = self.sess.run([self.sample_op, self.vf_eval], {self.tfs: s})
+        else:
+            a, v = self.sess.run([self.eval_action, self.vf_eval], {self.tfs: s})
+
         return a[0], np.squeeze(v)
 def discount(x, gamma, terminal_array=None):
     if terminal_array is None:
