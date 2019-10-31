@@ -26,11 +26,13 @@ public class TaikoAgents : Agent {
         {
             hz.blueHitVal = 1;
             hz.redHitVal = 0;
+            //AddReward(-0.01f);
         }
         else
         {
             hz.blueHitVal = 0;
             hz.redHitVal = 1;
+            //AddReward(-0.01f);
 
         }
         //if(hz.combo == 0)
@@ -47,7 +49,14 @@ public class TaikoAgents : Agent {
         }
         if(hz.combo > oldcombo)
         {
-            SetReward(1);
+            if (hz.status == "perfect")
+            {
+                AddReward(1);
+            }
+            else {
+                AddReward(0.5f);
+            }
+
         }
         oldcombo = hz.combo;
         if (hz.combo > 100) {
@@ -64,7 +73,6 @@ public class TaikoAgents : Agent {
     public override void AgentReset()
     {
         print("Reset");
-        SetReward(0);
         Destroy(GameObject.FindWithTag("redNotes"));
         Destroy(GameObject.FindWithTag("blueNotes"));
 

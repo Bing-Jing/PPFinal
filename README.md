@@ -39,3 +39,9 @@ https://github.com/openai/baselines
 
 ## Requirements
 - pip3 install -r requirements.txt
+
+## TO DO
+- [x] offline GAME
+- [x] single thread running(4500 episode)
+- [] multi-thread
+- [] play on taiko-web

@@ -1,6 +1,4 @@
 import tensorflow as tf
-import tensorflow.contrib.slim as slim
-import tensorflow_probability as tfp
 import numpy as np
 import matplotlib.pyplot as plt
 from datetime import datetime
@@ -22,7 +20,7 @@ TIMESTAMP = datetime.now().strftime("%Y%m%d_%H%M%S")
 
 class PPO(object):
 
-    def __init__(self,environment,load=False,testing=False,gpu=False):
+    def __init__(self,environment,load=False,testing=False,gpu=True):
         self.testing = testing
         self.s_dim, self.a_dim = environment.observation_space.shape, environment.action_space.n
         self.model_path = "model/"
@@ -130,33 +128,39 @@ class PPO(object):
         self.sess.run([self.update_oldpi_op, self.update_vf_old_op, self.iterator.initializer],
                       feed_dict={self.tfs: s, self.tfa: a, self.tfdc_r: r, self.tfadv: adv})
 
-        [self.sess.run([self.summarise, self.global_step, self.atrain_op]) for _ in range(UPDATE_STEPS)]
+        # [self.sess.run([self.summarise, self.global_step, self.atrain_op]) for _ in range(UPDATE_STEPS)]
+        while True:
+            try:
+                self.sess.run([self.summarise, self.global_step, self.atrain_op])
+            except:
+                break
         
     def _build_anet(self,inputs, name, trainable,reuse=False):
+        w_reg = tf.contrib.layers.l2_regularizer(0.001)
         with tf.variable_scope(name,reuse=reuse):
-            conv1 = slim.conv2d(inputs, 32, [3,3], activation_fn=tf.nn.relu,trainable=trainable)
-            conv2 = slim.conv2d(conv1, 64, [3,3], activation_fn=tf.nn.relu,trainable=trainable)
-            conv3 = slim.conv2d(conv2, 64, [3,3], activation_fn=tf.nn.relu,trainable=trainable)
+            conv1 = tf.layers.conv2d(inputs=inputs, filters=32, kernel_size=8, strides=4, activation=tf.nn.relu)
+            conv2 = tf.layers.conv2d(inputs=conv1, filters=64, kernel_size=4, strides=2, activation=tf.nn.relu)
+            conv3 = tf.layers.conv2d(inputs=conv2, filters=64, kernel_size=3, strides=1, activation=tf.nn.relu)
             state_in = tf.layers.flatten(conv3)
-            l1 = slim.fully_connected(state_in, 32,activation_fn=tf.nn.relu,trainable=trainable)
-            l1 = slim.fully_connected(l1, 64,activation_fn=tf.nn.relu,trainable=trainable)
-            l1 = slim.fully_connected(l1, 64,activation_fn=tf.nn.relu,trainable=trainable)
+            l1 = tf.layers.dense(state_in, 32, tf.nn.relu, kernel_regularizer=w_reg)
+            l1 = tf.layers.dense(l1, 64, tf.nn.relu, kernel_regularizer=w_reg)
+            l1 = tf.layers.dense(l1, 64, tf.nn.relu, kernel_regularizer=w_reg)
 
-            a_logits = slim.fully_connected(l1, self.a_dim)
-            dist = tfp.distributions.Categorical(logits=a_logits)
+            a_logits = tf.layers.dense(l1, self.a_dim, kernel_regularizer=w_reg)
+            dist = tf.distributions.Categorical(logits=a_logits)
         params = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope=name)
         return dist, params
     def _build_cnet(self,inputs, name, trainable,reuse=False):
-
+        w_reg = tf.contrib.layers.l2_regularizer(0.001)
         with tf.variable_scope(name,reuse=reuse):
-            conv1 = slim.conv2d(inputs, 32, [3,3], activation_fn=tf.nn.relu,trainable=trainable)
-            conv2 = slim.conv2d(conv1, 64, [3,3], activation_fn=tf.nn.relu,trainable=trainable)
-            conv3 = slim.conv2d(conv2, 64, [3,3], activation_fn=tf.nn.relu,trainable=trainable)
-            state_in = slim.flatten(conv3)
+            conv1 = tf.layers.conv2d(inputs=inputs, filters=32, kernel_size=8, strides=4, activation=tf.nn.relu)
+            conv2 = tf.layers.conv2d(inputs=conv1, filters=64, kernel_size=4, strides=2, activation=tf.nn.relu)
+            conv3 = tf.layers.conv2d(inputs=conv2, filters=64, kernel_size=3, strides=1, activation=tf.nn.relu)
+            state_in = tf.layers.flatten(conv3)
 
-            l1 = slim.fully_connected(state_in, 32,activation_fn=tf.nn.relu,trainable=trainable)
-            l1 = slim.fully_connected(l1, 64,activation_fn=tf.nn.relu,trainable=trainable)
-            vf = slim.fully_connected(l1, 1,activation_fn=tf.nn.relu,trainable=trainable)
+            l1 = tf.layers.dense(state_in, 32, tf.nn.relu, kernel_regularizer=w_reg)
+            l1 = tf.layers.dense(l1, 64, tf.nn.relu, kernel_regularizer=w_reg)
+            vf = tf.layers.dense(l1, 1, tf.nn.relu, kernel_regularizer=w_reg)
 
         params = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope=name)
         return vf, params

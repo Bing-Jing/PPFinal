@@ -1,0 +1,6 @@
+model_checkpoint_path: "model_20191031_153100_4500.cptk"
+all_model_checkpoint_paths: "model_20191031_153100_4100.cptk"
+all_model_checkpoint_paths: "model_20191031_153100_4200.cptk"
+all_model_checkpoint_paths: "model_20191031_153100_4300.cptk"
+all_model_checkpoint_paths: "model_20191031_153100_4400.cptk"
+all_model_checkpoint_paths: "model_20191031_153100_4500.cptk"

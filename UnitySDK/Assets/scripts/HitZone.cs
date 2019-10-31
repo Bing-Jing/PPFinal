@@ -25,7 +25,7 @@ public class HitZone : MonoBehaviour {
 	}
     void judge(GameObject collision) {
 
-        if (Mathf.Abs(collision.transform.position.x - this.gameObject.transform.position.x) > 0.6f)
+        if (Mathf.Abs(collision.transform.position.x - this.gameObject.transform.position.x) > 0.7f)
         {
             //bad
             status = "bad";

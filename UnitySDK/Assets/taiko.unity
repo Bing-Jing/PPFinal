@@ -508,7 +508,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   broadcastHub:
     broadcastingBrains:
-    - {fileID: 11400000, guid: 10ce9879d4c224b57a54a8c5a5c22658, type: 2}
+    - {fileID: 11400000, guid: 38094a72f2c244961ae0db76b8ce4d6d, type: 2}
     m_BrainsToControl:
     - {fileID: 11400000, guid: 10ce9879d4c224b57a54a8c5a5c22658, type: 2}
   m_TrainingConfiguration:
