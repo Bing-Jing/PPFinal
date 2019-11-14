@@ -5,27 +5,32 @@ from datetime import datetime
 import os
 from gym_unity.envs import UnityEnv
 import scipy.signal
-EP_MAX = 1000
+import threading
+from collections import deque
+
+EP_MAX = 5000
 GAMMA = 0.99
 LR = 0.0001
-BATCH = 1024
+N_WORKER = 5
+BATCH = 10240
 MINIBATCH = 64
 EPOCHS = 10
-UPDATE_STEPS = 10
 Epsilon=0.2
-ENTROPY_BETA = 0.01
 LAMBDA = 0.95
+
+GameDir = 'test.app'
+modelPath = "multi_thread_Model/"
 
 TIMESTAMP = datetime.now().strftime("%Y%m%d_%H%M%S")
 
 class PPO(object):
 
-    def __init__(self,environment,load=False,testing=False,gpu=True):
+    def __init__(self,environment,load=False,testing=False,gpu=True,ModelPath="model/"):
         self.testing = testing
         self.s_dim, self.a_dim = environment.observation_space.shape, environment.action_space.n
-        self.model_path = "model/"
-        self.buffer_s, self.buffer_a, self.buffer_r, self.buffer_v = [], [], [] , []
-        self.buffer_done = []
+        self.model_path = ModelPath
+        # self.buffer_s, self.buffer_a, self.buffer_r, self.buffer_v = [], [], [] , []
+        # self.buffer_done = []
         config = tf.ConfigProto(log_device_placement=False, device_count={'GPU': gpu})
         config.gpu_options.per_process_gpu_memory_fraction = 0.1
         self.sess = tf.Session(config=config)
@@ -84,8 +89,8 @@ class PPO(object):
                 tf.summary.scalar("loss", self.loss_vf)
             with tf.variable_scope('entropy'):
                 entropy = pi.entropy()
-                pol_entpen = -ENTROPY_BETA * tf.reduce_mean(entropy)
-            loss = self.aloss + self.loss_vf + pol_entpen
+                entropen = -0.01 * tf.reduce_mean(entropy)
+            loss = self.aloss + self.loss_vf + entropen
             tf.summary.scalar("total", loss)
             
         tf.summary.scalar("value", tf.reduce_mean(self.v))
@@ -123,17 +128,30 @@ class PPO(object):
         
         self.saver.save(self.sess, last_checkpoint)
     
-    def update(self, s, a, r, adv):
-        
-        self.sess.run([self.update_oldpi_op, self.update_vf_old_op, self.iterator.initializer],
-                      feed_dict={self.tfs: s, self.tfa: a, self.tfdc_r: r, self.tfadv: adv})
-
-        # [self.sess.run([self.summarise, self.global_step, self.atrain_op]) for _ in range(UPDATE_STEPS)]
-        while True:
-            try:
-                self.sess.run([self.summarise, self.global_step, self.atrain_op])
-            except:
-                break
+    def update(self):
+        global GLOBAL_COUNTER, GLOBAL_DATA
+        while not COORD.should_stop():
+            if GLOBAL_EP < EP_MAX:
+                UPDATE_EVENT.wait()
+                print("updating....")
+                
+                s = GLOBAL_DATA["state"]
+                a = GLOBAL_DATA["action"]
+                r = GLOBAL_DATA["reward"]
+                adv = GLOBAL_DATA["advantage"]
+            
+                self.sess.run([self.update_oldpi_op, self.update_vf_old_op, self.iterator.initializer],
+                            feed_dict={self.tfs: s, self.tfa: a \
+                                , self.tfdc_r: r, self.tfadv: adv})
+                while True:
+                    try:
+                        self.sess.run([self.summarise, self.global_step, self.atrain_op])
+                    except:
+                        break
+                GLOBAL_DATA = {"state":[],"action":[],"reward":[],"advantage":[]}
+                UPDATE_EVENT.clear()        
+                GLOBAL_COUNTER = 0 
+                COLLECT_EVENT.set()
         
     def _build_anet(self,inputs, name, trainable,reuse=False):
         w_reg = tf.contrib.layers.l2_regularizer(0.001)
@@ -183,60 +201,98 @@ def discount(x, gamma, terminal_array=None):
             adv.append(y)
         return np.array(adv)[::-1]
 
-if __name__ == "__main__":
-    env = UnityEnv('test.app', 0,use_visual=True)
-    ppo = PPO(env)
-    all_ep_r = []
-    t = 0
-    for ep in range(EP_MAX):
-        s = env.reset()
-        
-        ep_r = 0
-        
-        done = False
-        while not done: 
-            t+=1
-            env.render()
-            a,v = ppo.choose_action(s)
-            s_, r, done, _ = env.step(a)
-            ppo.buffer_s.append(s)
-            ppo.buffer_a.append(a)
-            ppo.buffer_r.append(r)
-            ppo.buffer_v.append(v)
-            ppo.buffer_done.append(done)
-            s = s_
-            ep_r += r
 
-            # update ppo
-            if (t+1) % BATCH == 0:
-                print("updating...")
-                t = 0
-                v_s_ = v
-                discounted_r = []
-                rewards = np.array(ppo.buffer_r)
-                v_final = [v * (1 - done)] 
-                terminals = np.array(ppo.buffer_done + [done])
-                values = np.array(ppo.buffer_v + v_final)
-                delta = rewards + GAMMA * values[1:] * (1 - terminals[1:]) - values[:-1]
-                advantage = discount(delta, GAMMA * LAMBDA, terminals)
-                returns = advantage + np.array(ppo.buffer_v)
-                advantage = (advantage - advantage.mean()) / np.maximum(advantage.std(), 1e-6)
+class Worker(object):
+    def __init__(self, wid):
+        self.wid = wid
+        self.lock = threading.Lock()
+        self.env = UnityEnv(GameDir, wid,use_visual=True)
 
-                for r in ppo.buffer_r[::-1]:
-                    v_s_ = r + GAMMA * v_s_
-                    discounted_r.append(v_s_)
-                discounted_r.reverse()
+        self.ppo = GLOBAL_PPO
 
-                bs, ba, br,badv = np.reshape(ppo.buffer_s, (-1,) + ppo.s_dim), np.vstack(ppo.buffer_a), \
-                                np.vstack(discounted_r), np.vstack(advantage)
-                ppo.buffer_s, ppo.buffer_a, ppo.buffer_r = [], [], []
-                ppo.buffer_v, ppo.buffer_done = [], []
-                ppo.update(bs, ba, br,badv)
-        print("episode = {}, ep_r = {}".format(ep,ep_r))
-        if ep != 0 and ep % 100 == 0:
-            ppo.save_model(steps=ep)
-
-        all_ep_r.append(ep_r)
+    def work(self):
+        global GLOBAL_EP, GLOBAL_COUNTER
+        t = 0
+        while not COORD.should_stop():
+            s = self.env.reset()
+            ep_r = 0
+            buffer_s, buffer_a, buffer_r, buffer_v ,buffer_done = [], [], [], [], []
+            done = False
+            
+            while not done:
+                if not COLLECT_EVENT.is_set():                  
+                    COLLECT_EVENT.wait()                        
+                    buffer_s, buffer_a, buffer_r, buffer_v ,buffer_done = [], [], [], [], []
+                a,v = self.ppo.choose_action(s)
+                s_, r, done, _ = self.env.step(a)
+                buffer_s.append(s)
+                buffer_a.append(a)
+                buffer_r.append(r)
+                buffer_v.append(v)
+                buffer_done.append(done)
+                s = s_
+                ep_r += r
+                t+=1
+                GLOBAL_COUNTER += 1
+                # update ppo
+                if (done or GLOBAL_COUNTER >= BATCH):
+                    
+                    t = 0
+                    rewards = np.array(buffer_r)
+                    v_final = [v * (1 - done)] 
+                    terminals = np.array(buffer_done + [done])
+                    values = np.array(buffer_v + v_final)
+                    delta = rewards + GAMMA * values[1:] * (1 - terminals[1:]) - values[:-1]
+                    advantage = discount(delta, GAMMA * LAMBDA, terminals)
+                    returns = advantage + np.array(buffer_v)
+                    advantage = (advantage - advantage.mean()) / np.maximum(advantage.std(), 1e-6)
 
 
+                    bs, ba, br,badv = np.reshape(buffer_s, (-1,) + self.ppo.s_dim), np.vstack(buffer_a), \
+                                    np.vstack(returns), np.vstack(advantage)
+                    buffer_s, buffer_a, buffer_r = [], [], []
+                    buffer_v, buffer_done = [], []
+                    COLLECT_EVENT.wait()
+                    self.lock.acquire()
+                    for i in range(len(bs)):
+                        GLOBAL_DATA["state"].append(bs[i])
+                        GLOBAL_DATA["reward"].append(br[i])
+                        GLOBAL_DATA["action"].append(ba[i])
+                        GLOBAL_DATA["advantage"].append(badv[i])
+                    self.lock.release()
+                    if GLOBAL_COUNTER >= BATCH and len(GLOBAL_DATA["state"])>= BATCH:
+                        COLLECT_EVENT.clear()
+                        UPDATE_EVENT.set() 
+                    # self.ppo.update(bs, ba, br,badv)
+
+                if GLOBAL_EP >= EP_MAX:
+                    self.env.close()
+                    COORD.request_stop()
+                    break
+            print("episode = {}, ep_r = {}, wid = {}".format(GLOBAL_EP,ep_r,self.wid))
+            GLOBAL_EP += 1
+            if GLOBAL_EP != 0 and GLOBAL_EP % 500 == 0:
+                self.ppo.save_model(steps=GLOBAL_EP)
+
+if __name__ == '__main__':
+    tmpenv = UnityEnv(GameDir, 0,use_visual=True).unwrapped
+    GLOBAL_PPO = PPO(tmpenv,ModelPath=modelPath)
+    tmpenv.close()
+    GLOBAL_DATA = {"state":[],"action":[],"reward":[],"advantage":[]}
+    UPDATE_EVENT, COLLECT_EVENT = threading.Event(), threading.Event()
+    UPDATE_EVENT.clear()
+    COLLECT_EVENT.set()
+    workers = [Worker(wid=i) for i in range(1,N_WORKER+1)]
+    
+    GLOBAL_COUNTER, GLOBAL_EP = 0, 0
+    COORD = tf.train.Coordinator()
+    
+    threads = []
+    for worker in workers:
+        t = threading.Thread(target=worker.work, args=())
+        t.start()
+        threads.append(t)
+    threads.append(threading.Thread(target=GLOBAL_PPO.update,))
+    threads[-1].start()
+    COORD.join(threads)
     

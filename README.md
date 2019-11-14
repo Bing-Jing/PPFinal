@@ -28,11 +28,11 @@ Most reinforcement learning environment uses OpenAi atari gym environment. Becau
 ## Statement of expected results
 We can parallelly train and play taiko.
 ## A timetable
-10/29~11/13 Do research on taiko web and reinforcement methods.
-11/13~11/20 Choose which reinforcement method to use and implement single thread version for this project.
-11/20~11/27 Find which part of code can be parallelized.
-11/27~12/10 Implement parallel training of taiko. 
-12/10~ Train agents.
+- 10/29~11/13 Do research on taiko web and reinforcement methods.
+- 11/13~11/20 Choose which reinforcement method to use and implement single thread version for this project.
+- 11/20~11/27 Find which part of code can be parallelized.
+- 11/27~12/10 Implement parallel training of taiko. 
+- 12/10~ Train agents.
 ## References
 https://github.com/bui/taiko-web
 https://github.com/openai/baselines
@@ -42,6 +42,7 @@ https://github.com/openai/baselines
 
 ## TO DO
 - [x] offline GAME
-- [x] single thread running(4500 episode)
-- [] multi-thread
-- [] play on taiko-web
+- [x] single thread running(4500 episodes, converge time => 15:31~17:32)
+- [x] multi-thread(3500 episodes, converge time => 14:29~15:25)
+- [ ] play on taiko-web
+- [ ] Final report

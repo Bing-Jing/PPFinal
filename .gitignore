@@ -1,6 +1,5 @@
 model/
 __pycache__/
-*.app
 *.exe
 images/
 log/
