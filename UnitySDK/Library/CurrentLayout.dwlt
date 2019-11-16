@@ -45,7 +45,7 @@ MonoBehaviour:
     y: 0
     width: 1440
     height: 824
-  m_MinSize: {x: 950, y: 300}
+  m_MinSize: {x: 950, y: 524}
   m_MaxSize: {x: 10000, y: 10000}
 --- !u!114 &3
 MonoBehaviour:
@@ -112,10 +112,10 @@ MonoBehaviour:
     y: 30
     width: 1440
     height: 774
-  m_MinSize: {x: 711, y: 474}
-  m_MaxSize: {x: 18006, y: 14024}
+  m_MinSize: {x: 713, y: 474}
+  m_MaxSize: {x: 18008, y: 14024}
   vertical: 0
-  controlID: 26
+  controlID: 114
 --- !u!114 &6
 MonoBehaviour:
   m_ObjectHideFlags: 52
@@ -140,7 +140,7 @@ MonoBehaviour:
   m_MinSize: {x: 202, y: 448}
   m_MaxSize: {x: 4002, y: 8048}
   vertical: 1
-  controlID: 111
+  controlID: 115
 --- !u!114 &7
 MonoBehaviour:
   m_ObjectHideFlags: 52
@@ -188,8 +188,8 @@ MonoBehaviour:
     y: 439
     width: 778
     height: 335
-  m_MinSize: {x: 200, y: 200}
-  m_MaxSize: {x: 4000, y: 4000}
+  m_MinSize: {x: 202, y: 224}
+  m_MaxSize: {x: 4002, y: 4024}
   m_ActualView: {fileID: 13}
   m_Panes:
   - {fileID: 13}
@@ -220,7 +220,7 @@ MonoBehaviour:
   m_MinSize: {x: 234, y: 474}
   m_MaxSize: {x: 10004, y: 14024}
   vertical: 1
-  controlID: 27
+  controlID: 31
 --- !u!114 &10
 MonoBehaviour:
   m_ObjectHideFlags: 52
@@ -292,8 +292,8 @@ MonoBehaviour:
     y: 0
     width: 336
     height: 774
-  m_MinSize: {x: 275, y: 50}
-  m_MaxSize: {x: 4000, y: 4000}
+  m_MinSize: {x: 277, y: 74}
+  m_MaxSize: {x: 4002, y: 4024}
   m_ActualView: {fileID: 20}
   m_Panes:
   - {fileID: 20}
@@ -446,9 +446,9 @@ MonoBehaviour:
     speed: 2
     m_Value: {x: 0.04167324, y: 0.015583425, z: 0.0006503425, w: -0.99900955}
   m_Size:
-    m_Target: 22
+    m_Target: -56.934082
     speed: 2
-    m_Value: 22
+    m_Value: -56.934082
   m_Ortho:
     m_Target: 0
     speed: 2
@@ -589,7 +589,7 @@ MonoBehaviour:
       scrollPos: {x: 0, y: 0}
       m_SelectedIDs: 
       m_LastClickedID: 0
-      m_ExpandedIDs: 76f7ffff9cf7ffff56f9ffffb6fbffff0c3a0000483a0000703a0000
+      m_ExpandedIDs: b2fbffffc6fbffffd4fbffffd6fbffff
       m_RenameOverlay:
         m_UserAcceptedRename: 0
         m_Name: 
@@ -657,14 +657,14 @@ MonoBehaviour:
   m_LastFolders:
   - Assets/TaikoBrain
   m_LastFoldersGridSize: 16
-  m_LastProjectPath: /Users/mac/Downloads/ml-agents-master-2/UnitySDK
+  m_LastProjectPath: /Users/mac/Desktop/PPFinal/UnitySDK
   m_LockTracker:
     m_IsLocked: 0
   m_FolderTreeState:
     scrollPos: {x: 0, y: 0}
-    m_SelectedIDs: 5c0e0000
-    m_LastClickedID: 3676
-    m_ExpandedIDs: 000000004c0b0000480e0000f60f000000ca9a3b
+    m_SelectedIDs: 580e0000
+    m_LastClickedID: 3672
+    m_ExpandedIDs: 00000000480b0000440e0000f20f000000ca9a3b
     m_RenameOverlay:
       m_UserAcceptedRename: 0
       m_Name: 
@@ -692,7 +692,7 @@ MonoBehaviour:
     scrollPos: {x: 0, y: 0}
     m_SelectedIDs: 
     m_LastClickedID: 0
-    m_ExpandedIDs: 000000004c0b0000480e0000f60f0000
+    m_ExpandedIDs: 00000000480b0000440e0000f20f0000
     m_RenameOverlay:
       m_UserAcceptedRename: 0
       m_Name: 
@@ -723,18 +723,18 @@ MonoBehaviour:
     m_ExpandedInstanceIDs: 4a3d0000782a00007c2a000000000000f2340000ce0a0000b80a0000e80a0000e40b0000
     m_RenameOverlay:
       m_UserAcceptedRename: 0
-      m_Name: HitZone
-      m_OriginalName: HitZone
+      m_Name: 
+      m_OriginalName: 
       m_EditFieldRect:
         serializedVersion: 2
         x: 0
         y: 0
         width: 0
         height: 0
-      m_UserData: 1618
+      m_UserData: 0
       m_IsWaitingForDelay: 0
       m_IsRenaming: 0
-      m_OriginalEventType: 0
+      m_OriginalEventType: 11
       m_IsRenamingFilename: 1
       m_ClientGUIView: {fileID: 11}
     m_CreateAssetUtility:

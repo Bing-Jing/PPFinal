@@ -25,9 +25,9 @@ TIMESTAMP = datetime.now().strftime("%Y%m%d_%H%M%S")
 
 class PPO(object):
 
-    def __init__(self,environment,load=False,testing=False,gpu=True,ModelPath="model/"):
+    def __init__(self,environment=None,load=False,testing=False,gpu=True,ModelPath="model/"):
         self.testing = testing
-        self.s_dim, self.a_dim = environment.observation_space.shape, environment.action_space.n
+        self.s_dim, self.a_dim = (84, 84, 3), 3
         self.model_path = ModelPath
         # self.buffer_s, self.buffer_a, self.buffer_r, self.buffer_v = [], [], [] , []
         # self.buffer_done = []
